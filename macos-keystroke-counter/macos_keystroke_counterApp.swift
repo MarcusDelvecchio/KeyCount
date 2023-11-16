@@ -7,20 +7,45 @@ struct macos_keystroke_trackerApp: App {
 
     var body: some Scene {
         Settings {
-            EmptyView()
+            SettingsWindow()
+                .environmentObject(appDelegate)
+        }
+        .commands {
+            CommandGroup(replacing: .newItem) {}
+            CommandGroup(after: .newItem) {
+                Button("Settings") {
+                    appDelegate.menu.showSettings()
+                }
+            }
         }
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var mainWindow: NSWindow!
     static private(set) var instance: AppDelegate!
     lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
-    var keystrokeCount = 0
-    private var eventTap: CFMachPort?
+    @Published var keystrokeCount: Int {
+        didSet {
+            UserDefaults.standard.set(keystrokeCount, forKey: "keystrokesToday")
+        }
+    }
 
-    var menu: ApplicationMenu!  // Make sure menu is declared at the class level
+    @Published var totalKeystrokes: Int {
+        didSet {
+            UserDefaults.standard.set(totalKeystrokes, forKey: "totalKeystrokes")
+        }
+    }
+
+    private var eventTap: CFMachPort?
+    var menu: ApplicationMenu!
+
+    override init() {
+        self.keystrokeCount = UserDefaults.standard.integer(forKey: "keystrokesToday")
+        self.totalKeystrokes = UserDefaults.standard.integer(forKey: "totalKeystrokes")
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Create a status item and set its properties
@@ -40,8 +65,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // Create the main window but don't show it
+        mainWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: true
+        )
+        mainWindow.title = "Keystroke Counter"
+        
         // Initialize ApplicationMenu only once
-        menu = ApplicationMenu(mainWindow: nil)
+        menu = ApplicationMenu(mainWindow: mainWindow, appDelegate: self)
 
         // Create the menu
         menu.buildMenu()
@@ -54,18 +88,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Register for key events using event tap
         setupEventTap()
-
-        // Set main window
-        mainWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        mainWindow.title = "Keystroke Counter"
-
-        // Pass the mainWindow to ApplicationMenu
-        menu.mainWindow = mainWindow
     }
     
     func updateKeystrokesCount() {
@@ -91,6 +113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func handleEvent(_ event: CGEvent) {
         keystrokeCount += 1
+        totalKeystrokes += 1
         updateKeystrokesCount()
     }
 
@@ -127,6 +150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func terminateApp() {
+        UserDefaults.standard.synchronize()
         if let eventTap = eventTap {
             CGEvent.tapEnable(tap: eventTap, enable: false)
         }
@@ -135,12 +159,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 class ApplicationMenu: ObservableObject {
+    var appDelegate: AppDelegate
     var menu: NSMenu!
     var mainWindow: NSWindow?
     var settingsWindow: NSWindow?
 
-    init(mainWindow: NSWindow?) {
+    init(mainWindow: NSWindow?, appDelegate: AppDelegate) {
         self.mainWindow = mainWindow
+        self.appDelegate = appDelegate
         buildMenu()
     }
 
@@ -166,7 +192,7 @@ class ApplicationMenu: ObservableObject {
             )
 
             settingsWindow?.title = "Settings"
-            settingsWindow?.contentViewController = NSHostingController(rootView: SettingsWindow())
+            settingsWindow?.contentViewController = NSHostingController(rootView: SettingsWindow().environmentObject(appDelegate))
         }
 
         // Show or bring to front the settings window
@@ -196,6 +222,7 @@ struct SettingsWindow: View {
     @State private var updateInterval = 0
     @State private var statusBarInfoSelection = 0
     @State private var clearKeystrokesDaily = false
+    @EnvironmentObject var appDelegate: AppDelegate
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -222,8 +249,8 @@ struct SettingsWindow: View {
             // Keystroke stats
             GroupBox(label: Text("Keystroke stats")) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("All-time keystrokes: 0") // Update with actual data
-                    Text("Keystrokes today: 0") // Update with actual data
+                    Text("All-time keystrokes: \(appDelegate.totalKeystrokes)")
+                    Text("Keystrokes today: \(appDelegate.keystrokeCount)")
                 }
                 .padding()
             }
@@ -231,7 +258,7 @@ struct SettingsWindow: View {
             // Other settings
             GroupBox(label: Text("Other settings")) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Toggle("Clear keystrokes at the end of every day", isOn: $clearKeystrokesDaily)
+                    Toggle("Clear keystrokes daily", isOn: $clearKeystrokesDaily)
                     Button("Delete all keystroke data") {
                         // Handle delete action
                     }
@@ -278,5 +305,17 @@ struct RadioButton: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct LazyView<Content: View>: View {
+    var content: () -> Content
+
+    init(_ content: @autoclosure @escaping () -> Content) {
+        self.content = content
+    }
+
+    var body: Content {
+        content()
     }
 }
