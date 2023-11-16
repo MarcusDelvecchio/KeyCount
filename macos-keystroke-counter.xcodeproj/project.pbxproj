@@ -15,7 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		285A43112B0568720060A160 /* macos-keystroke-tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "macos-keystroke-tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		285A43112B0568720060A160 /* macos-keystroke-counter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "macos-keystroke-counter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		285A43142B0568720060A160 /* macos_keystroke_trackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macos_keystroke_trackerApp.swift; sourceTree = "<group>"; };
 		285A43162B0568720060A160 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		285A43182B0568780060A160 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -46,7 +46,7 @@
 		285A43122B0568720060A160 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				285A43112B0568720060A160 /* macos-keystroke-tracker.app */,
+				285A43112B0568720060A160 /* macos-keystroke-counter.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,9 +75,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		285A43102B0568720060A160 /* macos-keystroke-tracker */ = {
+		285A43102B0568720060A160 /* macos-keystroke-counter */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 285A43202B0568780060A160 /* Build configuration list for PBXNativeTarget "macos-keystroke-tracker" */;
+			buildConfigurationList = 285A43202B0568780060A160 /* Build configuration list for PBXNativeTarget "macos-keystroke-counter" */;
 			buildPhases = (
 				285A430D2B0568720060A160 /* Sources */,
 				285A430E2B0568720060A160 /* Frameworks */,
@@ -87,9 +87,9 @@
 			);
 			dependencies = (
 			);
-			name = "macos-keystroke-tracker";
+			name = "macos-keystroke-counter";
 			productName = "macos-keystroke-tracker";
-			productReference = 285A43112B0568720060A160 /* macos-keystroke-tracker.app */;
+			productReference = 285A43112B0568720060A160 /* macos-keystroke-counter.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -107,7 +107,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 285A430C2B0568720060A160 /* Build configuration list for PBXProject "macos-keystroke-tracker" */;
+			buildConfigurationList = 285A430C2B0568720060A160 /* Build configuration list for PBXProject "macos-keystroke-counter" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -120,7 +120,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				285A43102B0568720060A160 /* macos-keystroke-tracker */,
+				285A43102B0568720060A160 /* macos-keystroke-counter */,
 			);
 		};
 /* End PBXProject section */
@@ -284,7 +284,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.delvecchio.macos-keystroke-tracker";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.delvecchio.macos-keystroke-counter";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -311,7 +311,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.delvecchio.macos-keystroke-tracker";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.delvecchio.macos-keystroke-counter";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -321,7 +321,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		285A430C2B0568720060A160 /* Build configuration list for PBXProject "macos-keystroke-tracker" */ = {
+		285A430C2B0568720060A160 /* Build configuration list for PBXProject "macos-keystroke-counter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				285A431E2B0568780060A160 /* Debug */,
@@ -330,7 +330,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		285A43202B0568780060A160 /* Build configuration list for PBXNativeTarget "macos-keystroke-tracker" */ = {
+		285A43202B0568780060A160 /* Build configuration list for PBXNativeTarget "macos-keystroke-counter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				285A43212B0568780060A160 /* Debug */,
