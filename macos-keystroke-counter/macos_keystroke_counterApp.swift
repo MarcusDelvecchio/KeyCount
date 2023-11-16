@@ -1,21 +1,10 @@
-//
-//  macos_keystroke_trackerApp.swift
-//  macos-keystroke-tracker
-//
-//  Created by Marcus DelVecchio on 2023-11-15.
-//
-
 import SwiftUI
-
-extension NSEvent {
-    var isAKeyDownEvent: Bool {
-        return type == .keyDown
-    }
-}
+import ApplicationServices
 
 @main
 struct macos_keystroke_trackerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         Settings {
             EmptyView()
@@ -30,22 +19,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var keystrokeCount = 0
     let menu = ApplicationMenu()
 
-    private var eventMonitor: Any?
+    private var eventTap: CFMachPort?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // create a status item and set its properties
+        // Create a status item and set its properties
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            // increase the font size
+            // Increase the font size
             let fontSize: CGFloat = 14.0 // Change this value to the desired font size
             let font = NSFont.systemFont(ofSize: fontSize)
-
             button.font = font
             updateKeystrokesCount()
 
-            // adjust the baselineOffset to center the text vertically
+            // Adjust the baselineOffset to center the text vertically
             if let font = button.font {
-                let offset = -(font.capHeight - font.xHeight) / 2 + 0.6 // adjusting vertical offset of the text
+                let offset = -(font.capHeight - font.xHeight) / 2 + 0.6 // Adjusting vertical offset of the text
                 button.attributedTitle = NSAttributedString(
                     string: "\(keystrokeCount) keystrokes",
                     attributes: [NSAttributedString.Key.baselineOffset: offset]
@@ -84,11 +72,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusItem.menu = menu
 
-        // Register for key events globally
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] _ in
-            self?.keystrokeCount += 1
-            self?.updateKeystrokesCount()
-        }
+        // Request accessibility permissions
+        requestAccessibilityPermission()
+
+        // Register for key events using event tap
+        setupEventTap()
     }
 
     func updateKeystrokesCount() {
@@ -105,19 +93,54 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func requestAccessibilityPermission() {
+        let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
+        if !AXIsProcessTrustedWithOptions(options) {
+            print("Please enable accessibility permissions for the app.")
+        }
+    }
+
+    func handleEvent(_ event: CGEvent) {
+        keystrokeCount += 1
+        updateKeystrokesCount()
+    }
+
+    func setupEventTap() {
+        let eventMask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
+        let mask = CGEventMask(eventMask)
+
+        let selfPointer = Unmanaged.passUnretained(self).toOpaque()
+        
+        eventTap = CGEvent.tapCreate(
+            tap: .cgAnnotatedSessionEventTap,
+            place: .tailAppendEventTap,
+            options: .listenOnly,
+            eventsOfInterest: mask,
+            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
+                guard let refcon = refcon else {
+                    return nil
+                }
+
+                let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
+                appDelegate.handleEvent(event)
+
+                return Unmanaged.passRetained(event)
+            },
+            userInfo: selfPointer
+        )
+
+        if let eventTap = eventTap {
+            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+            CGEvent.tapEnable(tap: eventTap, enable: true)
+            CFRunLoopRun()
+        }
+    }
+
     @objc func terminateApp() {
-        NSEvent.removeMonitor(eventMonitor)
-        NSApplication.shared.terminate(self)
-    }
-
-    // stub action for a menu item
-    @objc func menuItemClicked() {
-        print("Menu item clicked")
-    }
-
-    // stub action for the Quit menu item
-    @objc func quitClicked() {
-        NSEvent.removeMonitor(eventMonitor)
+        if let eventTap = eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+        }
         NSApplication.shared.terminate(self)
     }
 }

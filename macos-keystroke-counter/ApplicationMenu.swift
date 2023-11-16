@@ -1,6 +1,6 @@
 //
 //  ApplicationMenu.swift
-//  macos-keystroke-tracker
+//  macos-keystroke-counter
 //
 //  Created by Marcus DelVecchio on 2023-11-15.
 //
