@@ -420,12 +420,30 @@ struct KeystrokeHistoryView: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
+                if let todayHistory = getTodayKeystrokeHistory() {
+                    Text(todayHistory)
+                        .padding()
+                }
+
                 ForEach(getKeystrokeHistory(), id: \.self) { historyEntry in
                     Text(historyEntry)
                 }
+
+                if getKeystrokeHistory().isEmpty && getTodayKeystrokeHistory() == nil {
+                    Text("No keystroke history yet.")
+                        .padding()
+                }
             }
-            .padding()
         }
+    }
+    
+    func getTodayKeystrokeHistory() -> String? {
+        guard let todayKeystrokes = UserDefaults.standard.value(forKey: "keystrokesToday") as? Int else {
+            return nil
+        }
+
+        let todayDateString = formatDate(Date())
+        return "\(todayDateString): \(todayKeystrokes) keystrokes"
     }
 
     func getKeystrokeHistory() -> [String] {
