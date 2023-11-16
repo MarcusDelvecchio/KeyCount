@@ -251,6 +251,62 @@ class ApplicationMenu: ObservableObject {
 }
 
 struct SettingsWindow: View {
+    enum NavigationItem: Hashable {
+        case settings, keystrokeHistory
+    }
+
+    @State private var selectedItem: NavigationItem? = .settings
+    @State private var endpointURL = ""
+    @State private var updateInterval = 0
+    @State private var statusBarInfoSelection = 0
+    @State private var clearKeystrokesDaily = false
+    @EnvironmentObject var appDelegate: AppDelegate
+
+    var body: some View {
+        NavigationView {
+            List {
+                NavigationLink(
+                    destination: LazyView(SettingsView()),
+                    tag: .settings,
+                    selection: $selectedItem
+                ) {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .padding()
+                .frame(height: 15) // Adjust the height of the navigation items
+
+                NavigationLink(
+                    destination: LazyView(KeystrokeHistoryView()),
+                    tag: .keystrokeHistory,
+                    selection: $selectedItem
+                ) {
+                    Label("History", systemImage: "chart.bar.fill") // Shorten the label
+                }
+                .padding()
+                .frame(height: 15) // Adjust the height of the navigation items
+            }
+            .listStyle(SidebarListStyle())
+
+            // Main content
+            VStack(alignment: .leading, spacing: 10) {
+                switch selectedItem {
+                case .settings:
+                    SettingsView()
+                case .keystrokeHistory:
+                    KeystrokeHistoryView()
+                default:
+                    EmptyView()
+                }
+            }
+            .padding(15)
+            .frame(minWidth: 100,  maxWidth: 300, minHeight: 450)
+            .padding()
+        }
+        .frame(minWidth: 500, maxWidth: 700, minHeight: 600)
+    }
+}
+
+struct SettingsView: View {
     @State private var endpointURL = ""
     @State private var updateInterval = 0
     @State private var statusBarInfoSelection = 0
@@ -259,8 +315,13 @@ struct SettingsWindow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // Display the keystroke history
+            Text("Settings")
+                .font(.title)
+                .foregroundColor(.blue)
+            
             // Send updates to
-            GroupBox(label: Text("Send updates to")) {
+            GroupBox(label: Text("Send updates to").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
                     TextField("Endpoint URL", text: $endpointURL)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -268,28 +329,29 @@ struct SettingsWindow: View {
                         Text("Update Interval: \(updateInterval) seconds")
                     }
                 }
-                .padding()
+                .padding(8)
             }
+            .frame(maxWidth: 300)
 
             // Status bar info
-            GroupBox(label: Text("Status bar info")) {
+            GroupBox(label: Text("Status bar info").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
                     RadioButtonGroup(items: ["Keystrokes from today", "All-time keystrokes"], selected: $statusBarInfoSelection)
                 }
-                .padding()
+                .padding(8)
             }
 
             // Keystroke stats
-            GroupBox(label: Text("Keystroke stats")) {
+            GroupBox(label: Text("Keystroke stats").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("All-time keystrokes: \(appDelegate.totalKeystrokes)")
                     Text("Keystrokes today: \(appDelegate.keystrokeCount)")
                 }
-                .padding()
+                .padding(8)
             }
 
             // Other settings
-            GroupBox(label: Text("Other settings")) {
+            GroupBox(label: Text("Other settings").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
                     Toggle("Store daily keystrokes", isOn: $appDelegate.clearKeystrokesDaily)
                     Button("Delete all keystroke data") {
@@ -297,13 +359,13 @@ struct SettingsWindow: View {
                         clearAllKeystrokeData()
                     }
                 }
-                .padding()
+                .padding(8)
             }
 
             Spacer()
         }
         .padding(15)
-        .frame(minWidth: 300, minHeight: 450)
+        .frame(minWidth: 100, maxWidth: 400, minHeight: 450)
         .padding()
     }
     
@@ -347,6 +409,56 @@ struct SettingsWindow: View {
         successAlert.runModal()
     }
 }
+
+struct KeystrokeHistoryView: View {
+    var body: some View {
+        // Display the keystroke history
+        Text("Keystroke History")
+            .font(.title)
+            .foregroundColor(.blue)
+            .padding(.top, 20)
+
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(getKeystrokeHistory(), id: \.self) { historyEntry in
+                    Text(historyEntry)
+                }
+            }
+            .padding()
+        }
+    }
+
+    func getKeystrokeHistory() -> [String] {
+        var history: [String] = []
+
+        // Fetch keystroke history from UserDefaults
+        let historyKeys = UserDefaults.standard.dictionaryRepresentation().keys.filter { $0.hasPrefix("keystrokesHistory_") }
+        for key in historyKeys {
+            if let date = getDateFromHistoryKey(key),
+               let keystrokes = UserDefaults.standard.value(forKey: key) as? Int {
+                let dateString = formatDate(date)
+                let entry = "\(dateString): \(keystrokes) keystrokes"
+                history.append(entry)
+            }
+        }
+
+        return history
+    }
+
+    func getDateFromHistoryKey(_ key: String) -> Date? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = key.replacingOccurrences(of: "keystrokesHistory_", with: "")
+        return dateFormatter.date(from: dateString)
+    }
+
+    func formatDate(_ date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMMM d"
+        return dateFormatter.string(from: date)
+    }
+}
+
 
 struct RadioButtonGroup: View {
     let items: [String]
