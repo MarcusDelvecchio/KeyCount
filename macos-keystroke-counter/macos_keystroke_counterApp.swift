@@ -25,6 +25,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var mainWindow: NSWindow!
     static private(set) var instance: AppDelegate!
     lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    
+    private var currentDateKey: String {
+       let dateFormatter = DateFormatter()
+       dateFormatter.dateFormat = "yyyy-MM-dd"
+       return dateFormatter.string(from: Date())
+    }
+    
+    var clearKeystrokesDaily: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: "clearKeystrokesDaily")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "clearKeystrokesDaily")
+        }
+    }
 
     @Published var keystrokeCount: Int {
         didSet {
@@ -115,8 +130,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         keystrokeCount += 1
         totalKeystrokes += 1
         updateKeystrokesCount()
-    }
 
+        // Check if it's a new day
+        if clearKeystrokesDaily {
+            if let lastDate = UserDefaults.standard.string(forKey: "lastDate") {
+                if lastDate != currentDateKey {
+                    // Reset daily keystrokes count
+                    keystrokeCount = 0
+                    UserDefaults.standard.set(currentDateKey, forKey: "lastDate")
+
+                    // Store in keystroke history
+                    let keystrokesHistoryKey = "keystrokesHistory_\(currentDateKey)"
+                    let dailyKeystrokes = UserDefaults.standard.integer(forKey: "keystrokesToday")
+                    UserDefaults.standard.set(dailyKeystrokes, forKey: keystrokesHistoryKey)
+                }
+            } else {
+                UserDefaults.standard.set(currentDateKey, forKey: "lastDate")
+            }
+        }
+    }
+    
     func setupEventTap() {
         let eventMask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
         let mask = CGEventMask(eventMask) | CGEventFlags.maskCommand.rawValue
@@ -258,9 +291,10 @@ struct SettingsWindow: View {
             // Other settings
             GroupBox(label: Text("Other settings")) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Toggle("Clear keystrokes daily", isOn: $clearKeystrokesDaily)
+                    Toggle("Store daily keystrokes", isOn: $appDelegate.clearKeystrokesDaily)
                     Button("Delete all keystroke data") {
                         // Handle delete action
+                        clearAllKeystrokeData()
                     }
                 }
                 .padding()
@@ -271,6 +305,46 @@ struct SettingsWindow: View {
         .padding(15)
         .frame(minWidth: 300, minHeight: 450)
         .padding()
+    }
+    
+    func clearAllKeystrokeData() {
+        // Display confirmation modal
+        let alert = NSAlert()
+        alert.messageText = "Are you sure you want to clear all keystroke data?"
+        alert.informativeText = "This action cannot be undone."
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Clear All")
+        let response = alert.runModal()
+
+        if response == .alertSecondButtonReturn {
+            // Clear all keystroke data
+            UserDefaults.standard.removeObject(forKey: "keystrokesToday")
+            UserDefaults.standard.removeObject(forKey: "lastDate")
+            UserDefaults.standard.removeObject(forKey: "totalKeystrokes")
+            UserDefaults.standard.removeObject(forKey: "clearKeystrokesDaily")
+
+            // Clear keystroke history
+            let historyKeys = UserDefaults.standard.dictionaryRepresentation().keys.filter { $0.hasPrefix("keystrokesHistory_") }
+            for key in historyKeys {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+            
+            // Update local variables
+            appDelegate.keystrokeCount = 0
+            appDelegate.totalKeystrokes = 0
+
+            // Display success message
+            displaySuccess("Keystroke Data Cleared Successfully")
+        }
+    }
+    
+    // Display success message in an alert
+    func displaySuccess(_ message: String) {
+        let successAlert = NSAlert()
+        successAlert.messageText = message
+        successAlert.alertStyle = .informational
+        successAlert.addButton(withTitle: "OK")
+        successAlert.runModal()
     }
 }
 
