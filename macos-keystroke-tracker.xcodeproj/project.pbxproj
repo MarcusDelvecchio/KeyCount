@@ -11,6 +11,7 @@
 		285A43172B0568720060A160 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285A43162B0568720060A160 /* ContentView.swift */; };
 		285A43192B0568780060A160 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A43182B0568780060A160 /* Assets.xcassets */; };
 		285A431C2B0568780060A160 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A431B2B0568780060A160 /* Preview Assets.xcassets */; };
+		285A43242B05792D0060A160 /* ApplicationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285A43232B05792D0060A160 /* ApplicationMenu.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		285A43182B0568780060A160 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		285A431B2B0568780060A160 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		285A431D2B0568780060A160 /* macos_keystroke_tracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macos_keystroke_tracker.entitlements; sourceTree = "<group>"; };
+		285A43232B05792D0060A160 /* ApplicationMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			children = (
 				285A43142B0568720060A160 /* macos_keystroke_trackerApp.swift */,
 				285A43162B0568720060A160 /* ContentView.swift */,
+				285A43232B05792D0060A160 /* ApplicationMenu.swift */,
 				285A43182B0568780060A160 /* Assets.xcassets */,
 				285A431D2B0568780060A160 /* macos_keystroke_tracker.entitlements */,
 				285A431A2B0568780060A160 /* Preview Content */,
@@ -140,6 +143,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				285A43172B0568720060A160 /* ContentView.swift in Sources */,
+				285A43242B05792D0060A160 /* ApplicationMenu.swift in Sources */,
 				285A43152B0568720060A160 /* macos_keystroke_trackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
