@@ -308,7 +308,7 @@ struct SettingsWindow: View {
 
 struct SettingsView: View {
     @State private var endpointURL = ""
-    @State private var updateInterval = 0
+    @State private var updateIntervalStr = ""
     @State private var statusBarInfoSelection = 0
     @State private var clearKeystrokesDaily = false
     @EnvironmentObject var appDelegate: AppDelegate
@@ -323,11 +323,32 @@ struct SettingsView: View {
             // Send updates to
             GroupBox(label: Text("Send updates to").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
-                    TextField("Endpoint URL", text: $endpointURL)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Stepper(value: $updateInterval, in: 0...3600, step: 1) {
-                        Text("Update Interval: \(updateInterval) seconds")
+                    // Endpoint URI
+                    HStack {
+                        Text("Endpoint URI")
+                        Spacer()
                     }
+                    TextField("http://your/api/url", text: $endpointURL)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                    // Update Interval
+                    HStack {
+                        Text("Update Interval")
+                        Spacer()
+                        Text("seconds")
+                            .foregroundColor(.secondary)
+                            .padding(.trailing, 5)
+                    }
+                    TextField("30", text: $updateIntervalStr)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onChange(of: updateIntervalStr) { newValue in
+                            updateIntervalChanged(newValue)
+                        }
+                        .onAppear {
+                            // Load the value from UserDefaults or set the default to 30 seconds
+                            let savedUpdateInterval = UserDefaults.standard.integer(forKey: "updateInterval")
+                            updateIntervalStr = savedUpdateInterval > 0 ? savedUpdateInterval.description : "30"
+                        }
                 }
                 .padding(8)
             }
@@ -396,7 +417,18 @@ struct SettingsView: View {
             appDelegate.totalKeystrokes = 0
 
             // Display success message
-            displaySuccess("Keystroke Data Cleared Successfully")
+            displaySuccess("Keystroke Data  Cleared Successfully")
+        }
+    }
+    
+    func updateIntervalChanged(_ newValue: String) {
+        if let newInterval = Int(newValue) {
+            // Update UserDefaults
+            UserDefaults.standard.set(newInterval, forKey: "updateInterval")
+        } else {
+            // Display error and reset to previous value
+            displayError("Update interval must be an integer")
+            updateIntervalStr = UserDefaults.standard.integer(forKey: "updateInterval").description
         }
     }
     
@@ -407,6 +439,15 @@ struct SettingsView: View {
         successAlert.alertStyle = .informational
         successAlert.addButton(withTitle: "OK")
         successAlert.runModal()
+    }
+    
+    // Display error message in an alert
+    func displayError(_ message: String) {
+        let errorAlert = NSAlert()
+        errorAlert.messageText = message
+        errorAlert.alertStyle = .critical
+        errorAlert.addButton(withTitle: "OK")
+        errorAlert.runModal()
     }
 }
 
