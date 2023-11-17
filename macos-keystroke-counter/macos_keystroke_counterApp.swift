@@ -31,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     // Variables for maintaining keystroke data
     var keystrokeData: [Int] = []
     var currentTimeIndex: Int = 0
+    var endpointURL: String = ""
     
     let sendingUpdatesEnabledKey = "sendingUpdatesEnabled"
     let updateEndpointURIKey = "updateEndpointURI"
@@ -69,6 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     override init() {
         self.keystrokeCount = UserDefaults.standard.integer(forKey: "keystrokesToday")
         self.totalKeystrokes = UserDefaults.standard.integer(forKey: "totalKeystrokes")
+        self.endpointURL = UserDefaults.standard.string(forKey: updateEndpointURIKey) ?? ""
         self.keystrokeData = Array(repeating: 0, count: updateInterval * updatePrecision)
         super.init()
     }
@@ -118,11 +120,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // If sending updates is enabled start timer to send update data after every interval
         if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
             setupTimeIndexIncrementer()
-            
-            // Start a timer to periodically check and send keystroke data
-//            Timer.scheduledTimer(withTimeInterval: Double(updateInterval), repeats: true) { _ in
-//                self.sendKeystrokeData()
-//            }
         }
     }
     
@@ -140,10 +137,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
     
-    func sendKeystrokeData(data: Array<Int>) {
-        print("sending data")
-        print(data)
-        // add timestamp to data and send it in api request
+    func sendKeystrokeData(keyStrokeArray: [Int]) {
+        print("sending data like meat")
+        print(keyStrokeArray)
+        print(endpointURL)
+        // Convert the array of integers to a JSON data
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: keyStrokeArray) else {
+            print("Error converting array to JSON data.")
+            return
+        }
+
+        // Create the URL
+        guard let url = URL(string: endpointURL) else {
+            print("Invalid URL provided.")
+            return
+        }
+
+        // Create the request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        // Create and configure the URLSession
+        let session = URLSession.shared
+
+        // Create the data task
+        let task = session.dataTask(with: request) { (data, response, error) in
+            // Handle the response
+            if let error = error {
+                print("Error sending data: \(error.localizedDescription)")
+            } else if let data = data {
+                // Handle the response data if needed
+                let responseData = String(data: data, encoding: .utf8)
+                print("Response data: \(responseData ?? "No data")")
+            }
+        }
+
+        // Start the data task
+        task.resume()
     }
 
     func requestAccessibilityPermission() {
@@ -187,7 +219,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     func setupTimeIndexIncrementer() {
         // Create a timer that calls the incrementTimeIndex method every 1/4 second
-        let timer = Timer.scheduledTimer(timeInterval: 0.25, target: self, selector: #selector(incrementTimeIndex), userInfo: nil, repeats: true)
+        let timer = Timer.scheduledTimer    (timeInterval: 0.25, target: self, selector: #selector(incrementTimeIndex), userInfo: nil, repeats: true)
         
         // Run the timer on the current run loop
         RunLoop.current.add(timer, forMode: .common)
@@ -200,7 +232,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Reset currentTimeIndex to 0 when it reaches limit value and send the keystroke data
         if currentTimeIndex == Int(Double(updateInterval)*Double(updatePrecision)) {
             // send the data and reset the values
-            sendKeystrokeData(data: keystrokeData)
+            sendKeystrokeData(keyStrokeArray: keystrokeData)
             keystrokeData = Array(repeating: 0, count: updateInterval*4)
             currentTimeIndex = 0
         }
