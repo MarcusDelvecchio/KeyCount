@@ -307,11 +307,15 @@ struct SettingsWindow: View {
 }
 
 struct SettingsView: View {
-    @State private var endpointURL = ""
-    @State private var updateIntervalStr = ""
+    @State private var endpointURL = UserDefaults.standard.string(forKey: "updateEndpointURI") ?? ""
+    @State private var updateIntervalStr = UserDefaults.standard.string(forKey: "updateInterval") ?? "30"
     @State private var statusBarInfoSelection = 0
     @State private var clearKeystrokesDaily = false
     @EnvironmentObject var appDelegate: AppDelegate
+    
+    // Validation for sending updates inputs
+    @State private var sendUpdatesEnabled = UserDefaults.standard.bool(forKey: "sendingUpdatesEnabled") ?? false
+    @State private var sendUpdatesButtonDisabled = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -330,6 +334,10 @@ struct SettingsView: View {
                     }
                     TextField("http://your/api/url", text: $endpointURL)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .disabled(sendUpdatesEnabled)
+                        .onChange(of: endpointURL) { newValue in
+                            updateEndpointChanged(newValue)
+                        }
 
                     // Update Interval
                     HStack {
@@ -341,18 +349,34 @@ struct SettingsView: View {
                     }
                     TextField("30", text: $updateIntervalStr)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .disabled(sendUpdatesEnabled)
                         .onChange(of: updateIntervalStr) { newValue in
                             updateIntervalChanged(newValue)
                         }
-                        .onAppear {
-                            // Load the value from UserDefaults or set the default to 30 seconds
-                            let savedUpdateInterval = UserDefaults.standard.integer(forKey: "updateInterval")
-                            updateIntervalStr = savedUpdateInterval > 0 ? savedUpdateInterval.description : "30"
-                        }
+
+                    // Send Keystroke Updates Button
+                    Button(action: {
+                        sendUpdatesButtonPressed()
+                    }) {
+                        Text(sendUpdatesEnabled ? "Disable Send Updates" : "Enable Send Updates")
+                    }
+                    .padding(.top, 5)
+                    .disabled(sendUpdatesButtonDisabled)
+
+                    // Display reason for button being disabled
+                    if !sendUpdatesEnabled {
+                        Text(disabledButtonText())
+                            .foregroundColor(.gray)
+                            .padding(.top, 5)
+                    }
                 }
                 .padding(8)
             }
             .frame(maxWidth: 300)
+            .onAppear {
+                // Initialize sendUpdatesButtonDisabled when the view appears
+                sendUpdatesButtonDisabled = !areSendUpdatesInputsValid()
+            }
 
             // Status bar info
             GroupBox(label: Text("Status bar info").font(.headline)) {
@@ -421,14 +445,43 @@ struct SettingsView: View {
         }
     }
     
+    func updateEndpointChanged(_ newValue: String) {
+        UserDefaults.standard.set(newValue, forKey: "updateEndpointURI")
+        updateSendUpdatesButtonDisabled()
+    }
+
     func updateIntervalChanged(_ newValue: String) {
-        if let newInterval = Int(newValue) {
-            // Update UserDefaults
-            UserDefaults.standard.set(newInterval, forKey: "updateInterval")
+        UserDefaults.standard.set(newValue, forKey: "updateInterval")
+        updateSendUpdatesButtonDisabled()
+    }
+
+    func sendUpdatesButtonPressed() {
+        sendUpdatesEnabled.toggle()
+        UserDefaults.standard.set(sendUpdatesEnabled, forKey: "sendingUpdatesEnabled")
+        updateSendUpdatesButtonDisabled()
+    }
+
+    func updateSendUpdatesButtonDisabled() {
+        sendUpdatesButtonDisabled = !areSendUpdatesInputsValid()
+    }
+    
+    func areSendUpdatesInputsValid() -> Bool {
+        let validEndpoint = isValidEndpoint(endpointURL)
+        let validInterval = Int(updateIntervalStr) ?? 0 > 0
+        return validEndpoint && validInterval
+    }
+    
+    func isValidEndpoint(_ endpoint: String) -> Bool {
+        return endpoint.lowercased().hasPrefix("http://") || endpoint.lowercased().hasPrefix("https://")
+    }
+    
+    func disabledButtonText() -> String {
+        if !isValidEndpoint(endpointURL) && !(Int(updateIntervalStr) ?? 0 > 0) {
+            return "Missing values for sending updates"
+        } else if !isValidEndpoint(endpointURL) {
+            return "Valid HTTP/HTTPS endpoint required."
         } else {
-            // Display error and reset to previous value
-            displayError("Update interval must be an integer")
-            updateIntervalStr = UserDefaults.standard.integer(forKey: "updateInterval").description
+            return "Update interval must be an positive integer"
         }
     }
     
