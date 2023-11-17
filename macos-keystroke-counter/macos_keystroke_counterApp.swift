@@ -25,6 +25,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var mainWindow: NSWindow!
     static private(set) var instance: AppDelegate!
     lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    var updateInterval = Int(UserDefaults.standard.string(forKey: "updateInterval") ?? "30") ?? 30
+    var updatePrecision: Int = 4 // how precise the key detection logic is. 4 = 4 times per second
+    
+    // Variables for maintaining keystroke data
+    var keystrokeData: [Int] = []
+    var currentTimeIndex: Int = 0
+    
+    let sendingUpdatesEnabledKey = "sendingUpdatesEnabled"
+    let updateEndpointURIKey = "updateEndpointURI"
+    let updateIntervalKey = "updateInterval"
     
     private var currentDateKey: String {
        let dateFormatter = DateFormatter()
@@ -59,6 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     override init() {
         self.keystrokeCount = UserDefaults.standard.integer(forKey: "keystrokesToday")
         self.totalKeystrokes = UserDefaults.standard.integer(forKey: "totalKeystrokes")
+        self.keystrokeData = Array(repeating: 0, count: updateInterval * updatePrecision)
         super.init()
     }
 
@@ -103,6 +114,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
         // Register for key events using event tap
         setupEventTap()
+        
+        // If sending updates is enabled start timer to send update data after every interval
+        if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
+            setupTimeIndexIncrementer()
+            
+            // Start a timer to periodically check and send keystroke data
+//            Timer.scheduledTimer(withTimeInterval: Double(updateInterval), repeats: true) { _ in
+//                self.sendKeystrokeData()
+//            }
+        }
     }
     
     func updateKeystrokesCount() {
@@ -118,6 +139,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
+    
+    func sendKeystrokeData(data: Array<Int>) {
+        print("sending data")
+        print(data)
+        // add timestamp to data and send it in api request
+    }
 
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
@@ -130,6 +157,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         keystrokeCount += 1
         totalKeystrokes += 1
         updateKeystrokesCount()
+        
+        // If sendUpdatesEnabled is true, update the keystroke data
+        if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
+            //DispatchQueue.main.async {
+                // Increment the keystrokeData at the current time index
+                self.keystrokeData[self.currentTimeIndex] += 1
+            //}
+        }
 
         // Check if it's a new day
         if clearKeystrokesDaily {
@@ -150,6 +185,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
     
+    func setupTimeIndexIncrementer() {
+        // Create a timer that calls the incrementTimeIndex method every 1/4 second
+        let timer = Timer.scheduledTimer(timeInterval: 0.25, target: self, selector: #selector(incrementTimeIndex), userInfo: nil, repeats: true)
+        
+        // Run the timer on the current run loop
+        RunLoop.current.add(timer, forMode: .common)
+    }
+    
+    @objc func incrementTimeIndex() {
+        // Increment currentTimeIndex
+        currentTimeIndex += 1
+        
+        // Reset currentTimeIndex to 0 when it reaches limit value and send the keystroke data
+        if currentTimeIndex == Int(Double(updateInterval)*Double(updatePrecision)) {
+            // send the data and reset the values
+            sendKeystrokeData(data: keystrokeData)
+            keystrokeData = Array(repeating: 0, count: updateInterval*4)
+            currentTimeIndex = 0
+        }
+
+        // Your additional logic with the updated currentTimeIndex goes here
+        print("Current Time Index: \(currentTimeIndex)")
+    }
+    
     func setupEventTap() {
         let eventMask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
         let mask = CGEventMask(eventMask) | CGEventFlags.maskCommand.rawValue
@@ -165,7 +224,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 guard let refcon = refcon else {
                     return nil
                 }
-
                 let appDelegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
                 appDelegate.handleEvent(event)
 
