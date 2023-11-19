@@ -22,6 +22,7 @@ struct macos_keystroke_trackerApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    var activity: NSObjectProtocol?
     var mainWindow: NSWindow!
     static private(set) var instance: AppDelegate!
     lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -31,7 +32,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var keystrokeData: [Int] = []
     var currentTimeIndex: Int = 0
     var endpointURL: String = ""
-    var timer: DispatchSourceTimer?
     
     // The number of keystrokes at the beginning of the interval, so that when we send the data we can add the keystrokes from the leystroke data on to this value incrementally
     var keystrokesAtBeginningOfInterval: Int = 0
@@ -84,6 +84,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // Disable App Nap
+        activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Application counts user input data in the background")
+        
         // Create a status item and set its properties
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
@@ -240,22 +243,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func setupTimeIndexIncrementer() {
-        // Create a dispatch queue
-        let queue = DispatchQueue(label: "com.yourapp.timer")
+        // Create a timer that calls the incrementTimeIndex method [updatePrecision] times per second
+        let timer = Timer.scheduledTimer(timeInterval: 1.0/Double(updatePrecision), target: self, selector: #selector(incrementTimeIndex), userInfo: nil, repeats: true)
         
-        // Create a dispatch source timer
-        timer = DispatchSource.makeTimerSource(queue: queue)
-        
-        // Set the timer parameters (adjust as needed)
-        timer?.schedule(deadline: .now(), repeating: 1.0 / Double(updatePrecision))
-        
-        // Set the event handler
-        timer?.setEventHandler {
-            self.incrementTimeIndex()
-        }
-        
-        // Start the timer
-        timer?.resume()
+        // Run the timer on the current run loop
+        RunLoop.current.add(timer, forMode: .common)
     }
     
     @objc func incrementTimeIndex() {
@@ -272,7 +264,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
 
         // Your additional logic with the updated currentTimeIndex goes here
-        print("Current Time Index: \(currentTimeIndex)")
+        print("Timestamp: \(Date()) - Current Time Index: \(currentTimeIndex)")
+//        print("Current Time Index: \(currentTimeIndex)")
     }
     
     func setupEventTap() {
