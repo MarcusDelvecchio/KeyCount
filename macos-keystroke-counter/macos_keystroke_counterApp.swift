@@ -26,13 +26,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     static private(set) var instance: AppDelegate!
     lazy var statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     var updateInterval = Int(UserDefaults.standard.string(forKey: "updateInterval") ?? "30") ?? 30
-    var updatePrecision: Int = 4 // how precise the key detection logic is. 4 = 4 times per second
     
     // Variables for maintaining keystroke data
     var keystrokeData: [Int] = []
     var currentTimeIndex: Int = 0
     var endpointURL: String = ""
+    var timer: DispatchSourceTimer?
     
+    // The number of keystrokes at the beginning of the interval, so that when we send the data we can add the keystrokes from the leystroke data on to this value incrementally
+    var keystrokesAtBeginningOfInterval: Int = 0
+    
+    // how precise the key detection logic is. keystrokeData data will be an array of Integers where each Int represents the number of keystrokes that took place in each period. If updatePrecision = 4, then it will be the number of keystrokes in each 250ms period (4 periods per second)
+    var updatePrecision: Int = 10
+    
+    // keys for UserDefaults data
     let sendingUpdatesEnabledKey = "sendingUpdatesEnabled"
     let updateEndpointURIKey = "updateEndpointURI"
     let updateIntervalKey = "updateInterval"
@@ -69,6 +76,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     override init() {
         self.keystrokeCount = UserDefaults.standard.integer(forKey: "keystrokesToday")
+        self.keystrokesAtBeginningOfInterval = UserDefaults.standard.integer(forKey: "keystrokesToday")
         self.totalKeystrokes = UserDefaults.standard.integer(forKey: "totalKeystrokes")
         self.endpointURL = UserDefaults.standard.string(forKey: updateEndpointURIKey) ?? ""
         self.keystrokeData = Array(repeating: 0, count: updateInterval * updatePrecision)
@@ -137,25 +145,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
     
-    func sendKeystrokeData(keyStrokeArray: [Int]) {
-        print("sending data like meat")
-        print(keyStrokeArray)
-        print(endpointURL)
-        // Convert the array of integers to a JSON data
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: keyStrokeArray) else {
-            print("Error converting array to JSON data.")
+    func sendKeystrokeData(keyStrokeArray: [Int], keystrokesAtBeginningOfInterval: Int) {
+        // Get the current date and time
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let currentDateTime = dateFormatter.string(from: Date())
+
+        // Create a KeystrokeDataObject
+        let keystrokeObject = KeystrokeDataObject(
+            timestamp: currentDateTime,
+            intervalData: keyStrokeArray,
+            keystrokeCountBefore: keystrokesAtBeginningOfInterval, // the number of keystokes that we were at at the beginning of the interval
+            keystrokeCountAfter: self.keystrokeCount,
+            intervalLength: self.updateInterval,
+            updatePrecision: self.updatePrecision // todo logic needs to be added to change update precision and store it in UserDefaults
+        )
+        
+        print(keystrokeObject)
+
+        // Convert the object to JSON data
+        guard let jsonData = try? JSONEncoder().encode(keystrokeObject) else {
+            print("Error converting object to JSON data.")
             return
         }
 
         // Create the URL
         guard let url = URL(string: endpointURL) else {
-            print("Invalid URL provided.")
+            print("Invalid URL.")
             return
         }
 
         // Create the request
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
 
@@ -218,11 +240,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func setupTimeIndexIncrementer() {
-        // Create a timer that calls the incrementTimeIndex method every 1/4 second
-        let timer = Timer.scheduledTimer    (timeInterval: 0.25, target: self, selector: #selector(incrementTimeIndex), userInfo: nil, repeats: true)
+        // Create a dispatch queue
+        let queue = DispatchQueue(label: "com.yourapp.timer")
         
-        // Run the timer on the current run loop
-        RunLoop.current.add(timer, forMode: .common)
+        // Create a dispatch source timer
+        timer = DispatchSource.makeTimerSource(queue: queue)
+        
+        // Set the timer parameters (adjust as needed)
+        timer?.schedule(deadline: .now(), repeating: 1.0 / Double(updatePrecision))
+        
+        // Set the event handler
+        timer?.setEventHandler {
+            self.incrementTimeIndex()
+        }
+        
+        // Start the timer
+        timer?.resume()
     }
     
     @objc func incrementTimeIndex() {
@@ -232,8 +265,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Reset currentTimeIndex to 0 when it reaches limit value and send the keystroke data
         if currentTimeIndex == Int(Double(updateInterval)*Double(updatePrecision)) {
             // send the data and reset the values
-            sendKeystrokeData(keyStrokeArray: keystrokeData)
-            keystrokeData = Array(repeating: 0, count: updateInterval*4)
+            sendKeystrokeData(keyStrokeArray: keystrokeData, keystrokesAtBeginningOfInterval: keystrokesAtBeginningOfInterval)
+            keystrokesAtBeginningOfInterval = self.keystrokeCount // set the value at the beginning of the interval again
+            keystrokeData = Array(repeating: 0, count: updateInterval*updatePrecision) // create array of zeros for the interval. Array length is (how many seconds our intervals are)*(how many times per second we detect keystrokes)
             currentTimeIndex = 0
         }
 
@@ -706,4 +740,13 @@ struct LazyView<Content: View>: View {
     var body: Content {
         content()
     }
+}
+
+struct KeystrokeDataObject: Codable {
+    let timestamp: String
+    let intervalData: [Int]
+    let keystrokeCountBefore: Int
+    let keystrokeCountAfter: Int
+    let intervalLength: Int
+    let updatePrecision: Int
 }

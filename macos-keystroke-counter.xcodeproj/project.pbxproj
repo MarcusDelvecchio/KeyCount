@@ -13,6 +13,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2848C54F2B081B46007ECFF0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		285A43112B0568720060A160 /* macos-keystroke-counter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "macos-keystroke-counter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macos_keystroke_counterApp.swift; sourceTree = "<group>"; };
 		285A43182B0568780060A160 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -50,6 +51,7 @@
 		285A43132B0568720060A160 /* macos-keystroke-counter */ = {
 			isa = PBXGroup;
 			children = (
+				2848C54F2B081B46007ECFF0 /* Info.plist */,
 				285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */,
 				285A43182B0568780060A160 /* Assets.xcassets */,
 				285A431D2B0568780060A160 /* macos_keystroke_counter.entitlements */,
@@ -270,7 +272,9 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MacOS Keystroke Counter";
+				INFOPLIST_FILE = "macos-keystroke-counter/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -298,7 +302,9 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MacOS Keystroke Counter";
+				INFOPLIST_FILE = "macos-keystroke-counter/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
