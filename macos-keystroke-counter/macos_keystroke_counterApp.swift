@@ -1,3 +1,7 @@
+// macos-keystrok-counter
+// application available at https://github.com/MarcusDelvecchio/macos-keystroke-counter/tree/master
+// 
+
 import SwiftUI
 import ApplicationServices
 
@@ -37,7 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var keystrokesAtBeginningOfInterval: Int = 0
     
     // how precise the key detection logic is. keystrokeData data will be an array of Integers where each Int represents the number of keystrokes that took place in each period. If updatePrecision = 4, then it will be the number of keystrokes in each 250ms period (4 periods per second)
-    var updatePrecision: Int = 10
+    var updatePrecision: Int = 20
     
     // keys for UserDefaults data
     let sendingUpdatesEnabledKey = "sendingUpdatesEnabled"
@@ -96,7 +100,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             updateKeystrokesCount()
 
             if let font = button.font {
-                let offset = -(font.capHeight - font.xHeight) / 2 + 0.6
+                let offset = -(font.capHeight - font.xHeight) / 2 + 1.0
                 button.attributedTitle = NSAttributedString(
                     string: "\(keystrokeCount) keystrokes",
                     attributes: [NSAttributedString.Key.baselineOffset: offset]
@@ -139,7 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             button.title = "\(keystrokeCount) keystrokes"
 
             if let font = button.font {
-                let offset = -(font.capHeight - font.xHeight) / 2 + 0.6
+                let offset = -(font.capHeight - font.xHeight) / 2 + 1.0
                 button.attributedTitle = NSAttributedString(
                     string: "\(keystrokeCount) keystrokes",
                     attributes: [NSAttributedString.Key.baselineOffset: offset]
