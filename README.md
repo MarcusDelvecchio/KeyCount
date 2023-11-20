@@ -1,7 +1,7 @@
 # macos-keystroke-counter
 An open source macOS menu bar application that tracks and displays keystroke count and can (optionally) send real-time-like keystroke data to a specified http/https endpoint
 
-![demo]([https://media3.giphy.com/media/aUovxH8Vf9qDu/giphy.gif](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHFsaDJyZHZ6dmtxMnI3MG1qc2M4bXZpOTBrZGl1c3ljMmhnaWYzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WB1Y5VlmofpfQwjpZt/source.gif))
+![demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHFsaDJyZHZ6dmtxMnI3MG1qc2M4bXZpOTBrZGl1c3ljMmhnaWYzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WB1Y5VlmofpfQwjpZt/source.gif)
 
 ## Key features
 1. Count daily keystrokes and display them in the macOS menu bar
