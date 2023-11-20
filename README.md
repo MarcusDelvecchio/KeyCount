@@ -24,5 +24,5 @@ On newer versions of macOS (10.15+) there is an Input Monitoring menu under Secu
 2. Create a PR
 3. We'll merge the PR if all looks good!
 
-"Given the nature of this keystroke counting application, security is paramount. We emphasize the importance of thorough code reviews to ensure the absence of any malicious content or security vulnerabilities. Our team is committed to performing rigorous reviews, and we also encourage contributors to uphold the same level of diligence in their code submissions."
+_Given the nature of this keystroke counting application, security is paramount. We emphasize the importance of thorough code reviews to ensure the absence of any malicious content or security vulnerabilities. Our team is committed to performing rigorous reviews, and we also encourage contributors to uphold the same level of diligence in their code submissions._
 
