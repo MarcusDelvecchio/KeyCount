@@ -1,6 +1,8 @@
-// macos-keystrok-counter
-// application available at https://github.com/MarcusDelvecchio/macos-keystroke-counter/tree/master
-// 
+/*
+ * Copyright (c) 2023 Marcus Del Vecchio
+ * All rights reserved.
+ * Application available at https://github.com/MarcusDelvecchio/macos-keystroke-counter/tree/master
+ */
 
 import SwiftUI
 import ApplicationServices
@@ -167,8 +169,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             intervalLength: self.updateInterval,
             updatePrecision: self.updatePrecision // todo logic needs to be added to change update precision and store it in UserDefaults
         )
-        
-        print(keystrokeObject)
 
         // Convert the object to JSON data
         guard let jsonData = try? JSONEncoder().encode(keystrokeObject) else {
@@ -221,10 +221,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         // If sendUpdatesEnabled is true, update the keystroke data
         if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
-            //DispatchQueue.main.async {
-                // Increment the keystrokeData at the current time index
-                self.keystrokeData[self.currentTimeIndex] += 1
-            //}
+            // Increment the keystrokeData at the current time index
+            self.keystrokeData[self.currentTimeIndex] += 1
         }
 
         // Check if it's a new day
@@ -267,9 +265,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             currentTimeIndex = 0
         }
 
-        // Your additional logic with the updated currentTimeIndex goes here
-        print("Timestamp: \(Date()) - Current Time Index: \(currentTimeIndex)")
-//        print("Current Time Index: \(currentTimeIndex)")
+        // Uncommment print statement for timer increment debugging
+        // print("Timestamp: \(Date()) - Current Time Index: \(currentTimeIndex)")
     }
     
     func setupEventTap() {

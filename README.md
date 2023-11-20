@@ -17,7 +17,7 @@ An open source macOS menu bar application that tracks and displays keystroke cou
 ## Granting permissions
 This application requires your permission to receive events from macOS in order to count and display your keystrokes in the menu bar.
 
-On newer versions of macOS (10.15+) there is an Input Monitoring menu under Security & Privacy within the System Preferences app, and macos-keystroke-counter will appear there automatically the first time you run it. Simply unlock this menu and check the box next to macos-keystroke-counter to enable it.
+On newer versions of macOS (10.15+) there is an Input Monitoring menu under Security & Privacy within the System Preferences app, and macos-keystroke-counter will appear there automatically the first time you run it. Simply unlock this menu and check the box next to KeyCastr to enable it.
 
 ## Want to contribute?
 1. Code away
@@ -26,3 +26,5 @@ On newer versions of macOS (10.15+) there is an Input Monitoring menu under Secu
 
 _Given the nature of this keystroke counting application, security is paramount. We emphasize the importance of thorough code reviews to ensure the absence of any malicious content or security vulnerabilities. Our team is committed to performing rigorous reviews, and we also encourage contributors to uphold the same level of diligence in their code submissions._
 
+## Note on Attribution
+This project is open source under the MIT License. If you use or modify this code, kindly attribute it to [macos-keystroke-counter](https://github.com/MarcusDelvecchio/macos-keystroke-counter) and provide a link back to this repository.
