@@ -90,11 +90,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Simulate a new day by setting "lastDate" to yesterday
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        let yesterdayDateString = DateFormatter.localizedString(from: yesterday, dateStyle: .short, timeStyle: .none)
-        UserDefaults.standard.set(yesterdayDateString, forKey: "lastDate")
-        
         // Disable App Nap
         activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Application counts user input data in the background")
         
@@ -639,7 +634,6 @@ struct KeystrokeHistoryView: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let todayHistory = getTodayKeystrokeHistory() {
                     Text(todayHistory)
-                        .padding()
                 }
 
                 ForEach(getKeystrokeHistory(), id: \.self) { historyEntry in
