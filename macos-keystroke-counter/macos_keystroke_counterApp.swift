@@ -90,6 +90,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // Simulate a new day by setting "lastDate" to yesterday
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let yesterdayDateString = DateFormatter.localizedString(from: yesterday, dateStyle: .short, timeStyle: .none)
+        UserDefaults.standard.set(yesterdayDateString, forKey: "lastDate")
+        
         // Disable App Nap
         activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Application counts user input data in the background")
         
@@ -218,7 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         keystrokeCount += 1
         totalKeystrokes += 1
         updateKeystrokesCount()
-        
+
         // If sendUpdatesEnabled is true, update the keystroke data
         if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
             // Increment the keystrokeData at the current time index
@@ -229,14 +234,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if clearKeystrokesDaily {
             if let lastDate = UserDefaults.standard.string(forKey: "lastDate") {
                 if lastDate != currentDateKey {
-                    // Reset daily keystrokes count
-                    keystrokeCount = 0
-                    UserDefaults.standard.set(currentDateKey, forKey: "lastDate")
-
                     // Store in keystroke history
                     let keystrokesHistoryKey = "keystrokesHistory_\(currentDateKey)"
                     let dailyKeystrokes = UserDefaults.standard.integer(forKey: "keystrokesToday")
                     UserDefaults.standard.set(dailyKeystrokes, forKey: keystrokesHistoryKey)
+
+                    // Reset daily keystrokes count
+                    keystrokeCount = 0
+                    UserDefaults.standard.set(currentDateKey, forKey: "lastDate")
                 }
             } else {
                 UserDefaults.standard.set(currentDateKey, forKey: "lastDate")
@@ -650,12 +655,12 @@ struct KeystrokeHistoryView: View {
     }
     
     func getTodayKeystrokeHistory() -> String? {
-        guard let todayKeystrokes = UserDefaults.standard.value(forKey: "keystrokesToday") as? Int else {
+        let currentDateKey = DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .none)
+        guard let todayKeystrokes = UserDefaults.standard.value(forKey: "keystrokesHistory_\(currentDateKey)") as? Int else {
             return nil
         }
 
-        let todayDateString = formatDate(Date())
-        return "\(todayDateString): \(todayKeystrokes) keystrokes"
+        return "\(currentDateKey): \(todayKeystrokes) keystrokes"
     }
 
     func getKeystrokeHistory() -> [String] {
@@ -664,9 +669,8 @@ struct KeystrokeHistoryView: View {
         // Fetch keystroke history from UserDefaults
         let historyKeys = UserDefaults.standard.dictionaryRepresentation().keys.filter { $0.hasPrefix("keystrokesHistory_") }
         for key in historyKeys {
-            if let date = getDateFromHistoryKey(key),
-               let keystrokes = UserDefaults.standard.value(forKey: key) as? Int {
-                let dateString = formatDate(date)
+            if let keystrokes = UserDefaults.standard.value(forKey: key) as? Int {
+                let dateString = key.replacingOccurrences(of: "keystrokesHistory_", with: "")
                 let entry = "\(dateString): \(keystrokes) keystrokes"
                 history.append(entry)
             }
