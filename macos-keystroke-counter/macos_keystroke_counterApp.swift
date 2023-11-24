@@ -179,6 +179,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Create the URL
         guard let url = URL(string: endpointURL) else {
             print("Invalid URL.")
+            UserDefaults.standard.set(false, forKey: sendingUpdatesEnabledKey)
             return
         }
 
@@ -195,7 +196,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let task = session.dataTask(with: request) { (data, response, error) in
             // Handle the response
             if let error = error {
-                print("Error sending data: \(error.localizedDescription)")
+                // Handle specific errors
+                if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .cannotConnectToHost, .notConnectedToInternet:
+                        print("Error sending data: Cannot connect to the server or not connected to the internet.")
+                    default:
+                        print("Error sending data: An error occurred while sending data.")
+                    }
+                } else {
+                    print("Error sending data: An error occurred while sending data.")
+                }
+
+                // Set sendingUpdatesEnabledKey to false on error
+                UserDefaults.standard.set(false, forKey: self.sendingUpdatesEnabledKey)
             } else if let data = data {
                 // Handle the response data if needed
                 let responseData = String(data: data, encoding: .utf8)
