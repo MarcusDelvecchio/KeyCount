@@ -10,6 +10,7 @@
 		285A43152B0568720060A160 /* macos_keystroke_counterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */; };
 		285A43192B0568780060A160 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A43182B0568780060A160 /* Assets.xcassets */; };
 		285A431C2B0568780060A160 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A431B2B0568780060A160 /* Preview Assets.xcassets */; };
+		28D346192B1042EE00D57C02 /* icons.iconset in Resources */ = {isa = PBXBuildFile; fileRef = 28D346182B1042EE00D57C02 /* icons.iconset */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,7 @@
 		285A43182B0568780060A160 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		285A431B2B0568780060A160 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		285A431D2B0568780060A160 /* macos_keystroke_counter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macos_keystroke_counter.entitlements; sourceTree = "<group>"; };
+		28D346182B1042EE00D57C02 /* icons.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; path = icons.iconset; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 		285A43132B0568720060A160 /* macos-keystroke-counter */ = {
 			isa = PBXGroup;
 			children = (
+				28D346182B1042EE00D57C02 /* icons.iconset */,
 				2848C54F2B081B46007ECFF0 /* Info.plist */,
 				285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */,
 				285A43182B0568780060A160 /* Assets.xcassets */,
@@ -128,6 +131,7 @@
 			files = (
 				285A431C2B0568780060A160 /* Preview Assets.xcassets in Resources */,
 				285A43192B0568780060A160 /* Assets.xcassets in Resources */,
+				28D346192B1042EE00D57C02 /* icons.iconset in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
