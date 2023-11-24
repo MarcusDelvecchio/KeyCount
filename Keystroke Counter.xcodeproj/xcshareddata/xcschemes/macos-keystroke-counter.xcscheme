@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "285A43102B0568720060A160"
-               BuildableName = "macos-keystroke-counter.app"
-               BlueprintName = "macos-keystroke-counter"
-               ReferencedContainer = "container:macos-keystroke-counter.xcodeproj">
+               BuildableName = "Keystroke Counter.app"
+               BlueprintName = "Keystroke Counter"
+               ReferencedContainer = "container:Keystroke Counter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "285A43102B0568720060A160"
-            BuildableName = "macos-keystroke-counter.app"
-            BlueprintName = "macos-keystroke-counter"
-            ReferencedContainer = "container:macos-keystroke-counter.xcodeproj">
+            BuildableName = "Keystroke Counter.app"
+            BlueprintName = "Keystroke Counter"
+            ReferencedContainer = "container:Keystroke Counter.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "285A43102B0568720060A160"
-            BuildableName = "macos-keystroke-counter.app"
-            BlueprintName = "macos-keystroke-counter"
-            ReferencedContainer = "container:macos-keystroke-counter.xcodeproj">
+            BuildableName = "Keystroke Counter.app"
+            BlueprintName = "Keystroke Counter"
+            ReferencedContainer = "container:Keystroke Counter.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
