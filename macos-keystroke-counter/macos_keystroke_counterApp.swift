@@ -510,8 +510,8 @@ struct SettingsView: View {
                 sendUpdatesButtonDisabled = !areSendUpdatesInputsValid()
             }
 
-            // Status bar info
-            GroupBox(label: Text("Status bar info").font(.headline)) {
+            // Menu bar info
+            GroupBox(label: Text("Menu bar info").font(.headline)) {
                 VStack(alignment: .leading, spacing: 5) {
                     RadioButtonGroup(items: ["Keystrokes from today", "All-time keystrokes"], selected: $statusBarInfoSelection)
                 }
