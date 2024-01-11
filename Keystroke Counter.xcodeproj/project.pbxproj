@@ -7,13 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		283C40AE2B50519F00777365 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 283C40AD2B50519F00777365 /* GoogleService-Info.plist */; };
 		285A43152B0568720060A160 /* macos_keystroke_counterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */; };
 		285A43192B0568780060A160 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A43182B0568780060A160 /* Assets.xcassets */; };
 		285A431C2B0568780060A160 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 285A431B2B0568780060A160 /* Preview Assets.xcassets */; };
+		28B06F862B5056CD000D3B65 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 28B06F852B5056CD000D3B65 /* FirebaseDatabase */; };
+		28B06F882B5056CD000D3B65 /* FirebaseDatabaseSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 28B06F872B5056CD000D3B65 /* FirebaseDatabaseSwift */; };
 		28D346192B1042EE00D57C02 /* icons.iconset in Resources */ = {isa = PBXBuildFile; fileRef = 28D346182B1042EE00D57C02 /* icons.iconset */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		283C40AD2B50519F00777365 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../Downloads/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2848C54F2B081B46007ECFF0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		285A43112B0568720060A160 /* Keystroke Counter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Keystroke Counter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = macos_keystroke_counterApp.swift; sourceTree = "<group>"; };
@@ -28,6 +32,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28B06F882B5056CD000D3B65 /* FirebaseDatabaseSwift in Frameworks */,
+				28B06F862B5056CD000D3B65 /* FirebaseDatabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +59,7 @@
 		285A43132B0568720060A160 /* macos-keystroke-counter */ = {
 			isa = PBXGroup;
 			children = (
+				283C40AD2B50519F00777365 /* GoogleService-Info.plist */,
 				28D346182B1042EE00D57C02 /* icons.iconset */,
 				2848C54F2B081B46007ECFF0 /* Info.plist */,
 				285A43142B0568720060A160 /* macos_keystroke_counterApp.swift */,
@@ -87,6 +94,10 @@
 			dependencies = (
 			);
 			name = "Keystroke Counter";
+			packageProductDependencies = (
+				28B06F852B5056CD000D3B65 /* FirebaseDatabase */,
+				28B06F872B5056CD000D3B65 /* FirebaseDatabaseSwift */,
+			);
 			productName = "macos-keystroke-tracker";
 			productReference = 285A43112B0568720060A160 /* Keystroke Counter.app */;
 			productType = "com.apple.product-type.application";
@@ -115,6 +126,9 @@
 				Base,
 			);
 			mainGroup = 285A43082B0568720060A160;
+			packageReferences = (
+				28B06F842B5056CD000D3B65 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			productRefGroup = 285A43122B0568720060A160 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -130,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				285A431C2B0568780060A160 /* Preview Assets.xcassets in Resources */,
+				283C40AE2B50519F00777365 /* GoogleService-Info.plist in Resources */,
 				285A43192B0568780060A160 /* Assets.xcassets in Resources */,
 				28D346192B1042EE00D57C02 /* icons.iconset in Resources */,
 			);
@@ -344,6 +359,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		28B06F842B5056CD000D3B65 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		28B06F852B5056CD000D3B65 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 28B06F842B5056CD000D3B65 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		28B06F872B5056CD000D3B65 /* FirebaseDatabaseSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 28B06F842B5056CD000D3B65 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabaseSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 285A43092B0568720060A160 /* Project object */;
 }

@@ -6,6 +6,8 @@
 
 import SwiftUI
 import ApplicationServices
+import FirebaseCore
+import FirebaseDatabase
 
 @main
 struct macos_keystroke_trackerApp: App {
@@ -90,7 +92,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Disable App Nap
+        // Disable App Nap and add Firebase
+        FirebaseApp.configure()
         activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Application counts user input data in the background")
         
         // Create a status item and set its properties
