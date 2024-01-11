@@ -173,55 +173,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             updatePrecision: self.updatePrecision // todo logic needs to be added to change update precision and store it in UserDefaults
         )
 
+        let database = Database.database().reference()
+        let dataRef = database.child("keystrokes/recent")
+
         // Convert the object to JSON data
-        guard let jsonData = try? JSONEncoder().encode(keystrokeObject) else {
+        guard let jsonData = try? JSONEncoder().encode(keystrokeObject),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
             print("Error converting object to JSON data.")
             return
         }
 
-        // Create the URL
-        guard let url = URL(string: endpointURL) else {
-            print("Invalid URL.")
-            UserDefaults.standard.set(false, forKey: sendingUpdatesEnabledKey)
-            return
-        }
-
-        // Create the request
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-
-        // Create and configure the URLSession
-        let session = URLSession.shared
-
-        // Create the data task
-        let task = session.dataTask(with: request) { (data, response, error) in
-            // Handle the response
+        // Push the data to generate a unique key
+        let newChildRef = dataRef.childByAutoId()
+        newChildRef.setValue(jsonString) { (error, _) in
             if let error = error {
-                // Handle specific errors
-                if let urlError = error as? URLError {
-                    switch urlError.code {
-                    case .cannotConnectToHost, .notConnectedToInternet:
-                        print("Error sending data: Cannot connect to the server or not connected to the internet.")
-                    default:
-                        print("Error sending data: An error occurred while sending data.")
-                    }
-                } else {
-                    print("Error sending data: An error occurred while sending data.")
-                }
-
-                // Set sendingUpdatesEnabledKey to false on error
-                UserDefaults.standard.set(false, forKey: self.sendingUpdatesEnabledKey)
-            } else if let data = data {
-                // Handle the response data if needed
-                let responseData = String(data: data, encoding: .utf8)
-                print("Response data: \(responseData ?? "No data")")
+                print("Error writing data to Firebase: \(error.localizedDescription)")
+            } else {
+                print("Data written successfully to Firebase.")
             }
         }
-
-        // Start the data task
-        task.resume()
     }
 
     func requestAccessibilityPermission() {
