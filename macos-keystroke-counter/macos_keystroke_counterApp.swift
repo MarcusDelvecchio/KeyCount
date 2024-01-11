@@ -178,19 +178,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
         // Convert the object to JSON data
         guard let jsonData = try? JSONEncoder().encode(keystrokeObject),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
-            print("Error converting object to JSON data.")
-            return
+             let jsonString = String(data: jsonData, encoding: .utf8) else {
+               print("Error converting object to JSON data.")
+               return
         }
 
-        // Push the data to generate a unique key
-        let newChildRef = dataRef.childByAutoId()
-        newChildRef.setValue(jsonString) { (error, _) in
-            if let error = error {
-                print("Error writing data to Firebase: \(error.localizedDescription)")
-            } else {
-                print("Data written successfully to Firebase.")
-            }
+        // Update the existing record at 'recent'
+        dataRef.setValue(jsonString) { (error, _) in
+           if let error = error {
+               print("Error writing data to Firebase: \(error.localizedDescription)")
+           } else {
+               print("Data written successfully to Firebase.")
+           }
         }
     }
 
