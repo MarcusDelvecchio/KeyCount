@@ -187,8 +187,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         dataRef.setValue(jsonString) { (error, _) in
            if let error = error {
                print("Error writing data to Firebase: \(error.localizedDescription)")
-           } else {
-               print("Data written successfully to Firebase.")
            }
         }
     }
