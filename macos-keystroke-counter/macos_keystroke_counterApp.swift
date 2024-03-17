@@ -148,59 +148,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
-    
-    func sendKeystrokeData(keyStrokeArray: [Int], keystrokesAtBeginningOfInterval: Int) {
-        // Get the current date and time
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        let currentDateTime = dateFormatter.string(from: Date())
-
-        // Create a KeystrokeDataObject
-        let keystrokeObject = KeystrokeDataObject(
-            timestamp: currentDateTime,
-            intervalData: keyStrokeArray,
-            keystrokeCountBefore: keystrokesAtBeginningOfInterval, // the number of keystokes that we were at at the beginning of the interval
-            keystrokeCountAfter: self.keystrokeCount,
-            intervalLength: self.updateInterval,
-            updatePrecision: self.updatePrecision // todo logic needs to be added to change update precision and store it in UserDefaults
-        )
-
-        // Convert the object to JSON data
-        guard let jsonData = try? JSONEncoder().encode(keystrokeObject) else {
-            print("Error converting object to JSON data.")
-            return
-        }
-
-        // Create the URL
-        guard let url = URL(string: endpointURL) else {
-            print("Invalid URL.")
-            return
-        }
-
-        // Create the request
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-
-        // Create and configure the URLSession
-        let session = URLSession.shared
-
-        // Create the data task
-        let task = session.dataTask(with: request) { (data, response, error) in
-            // Handle the response
-            if let error = error {
-                print("Error sending data: \(error.localizedDescription)")
-            } else if let data = data {
-                // Handle the response data if needed
-                let responseData = String(data: data, encoding: .utf8)
-                print("Response data: \(responseData ?? "No data")")
-            }
-        }
-
-        // Start the data task
-        task.resume()
-    }
 
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
@@ -251,15 +198,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Increment currentTimeIndex
         currentTimeIndex += 1
         
-        // Reset currentTimeIndex to 0 when it reaches limit value and send the keystroke data
-        if currentTimeIndex == Int(Double(updateInterval)*Double(updatePrecision)) {
-            // send the data and reset the values
-            sendKeystrokeData(keyStrokeArray: keystrokeData, keystrokesAtBeginningOfInterval: keystrokesAtBeginningOfInterval)
-            keystrokesAtBeginningOfInterval = self.keystrokeCount // set the value at the beginning of the interval again
-            keystrokeData = Array(repeating: 0, count: updateInterval*updatePrecision) // create array of zeros for the interval. Array length is (how many seconds our intervals are)*(how many times per second we detect keystrokes)
-            currentTimeIndex = 0
-        }
-
         // Uncommment print statement for timer increment debugging
         // print("Timestamp: \(Date()) - Current Time Index: \(currentTimeIndex)")
     }
