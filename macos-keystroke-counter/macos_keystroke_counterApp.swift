@@ -139,6 +139,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             
             button.title = displayString
 
+            // Calculate the minimum width based on the number of digits
+            var minWidth: CGFloat = 110.0
+            let digitCount = "\(keystrokeCount)".count
+
+            if digitCount >= 4 {
+                minWidth += CGFloat(digitCount - 4) * 10.0
+            }
+
             if let font = button.font {
                 let offset = -(font.capHeight - font.xHeight) / 2 + 1.0
                 button.attributedTitle = NSAttributedString(
@@ -146,8 +154,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     attributes: [NSAttributedString.Key.baselineOffset: offset]
                 )
             }
+
+            // Set the minimum width
+            statusItem.length = minWidth
         }
     }
+
 
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
@@ -160,12 +172,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         keystrokeCount += 1
         totalKeystrokes += 1
         updateKeystrokesCount()
-        
-        // If sendUpdatesEnabled is true, update the keystroke data
-        if UserDefaults.standard.bool(forKey: self.sendingUpdatesEnabledKey) {
-            // Increment the keystrokeData at the current time index
-            self.keystrokeData[self.currentTimeIndex] += 1
-        }
 
         // Check if it's a new day
         if clearKeystrokesDaily {
