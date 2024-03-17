@@ -1,26 +1,19 @@
-/*
- * Copyright (c) 2023 Marcus Del Vecchio
- * All rights reserved.
- * Application available at https://github.com/MarcusDelvecchio/macos-keystroke-counter/tree/master
- */
-
 import SwiftUI
 import ApplicationServices
 
 @main
-struct macos_keystroke_trackerApp: App {
+struct KeystrokeTrackerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
         Settings {
-            SettingsWindow()
-                .environmentObject(appDelegate)
+            // Removed SettingsWindow reference
         }
         .commands {
             CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .newItem) {
                 Button("Settings") {
-                    appDelegate.menu.showSettings()
+                    // Implement action for Settings button if needed
                 }
             }
         }
@@ -142,12 +135,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     func updateKeystrokesCount() {
         if let button = statusItem.button {
-            button.title = "\(keystrokeCount) keystrokes"
+            let displayString = menu?.showNumbersOnly == true ? "\(keystrokeCount)" : "\(keystrokeCount) keystrokes"
+            
+            button.title = displayString
 
             if let font = button.font {
                 let offset = -(font.capHeight - font.xHeight) / 2 + 1.0
                 button.attributedTitle = NSAttributedString(
-                    string: "\(keystrokeCount) keystrokes",
+                    string: displayString,
                     attributes: [NSAttributedString.Key.baselineOffset: offset]
                 )
             }
@@ -314,47 +309,64 @@ class ApplicationMenu: ObservableObject {
     var menu: NSMenu!
     var mainWindow: NSWindow?
     var settingsWindow: NSWindow?
+    @Published var showNumbersOnly: Bool = false {
+        didSet {
+            UserDefaults.standard.set(showNumbersOnly, forKey: "ShowNumbersOnly")
+            appDelegate.updateKeystrokesCount()
+        }
+    }
 
     init(mainWindow: NSWindow?, appDelegate: AppDelegate) {
         self.mainWindow = mainWindow
         self.appDelegate = appDelegate
+        self.showNumbersOnly = UserDefaults.standard.bool(forKey: "ShowNumbersOnly")
         buildMenu()
     }
 
     func buildMenu() {
         menu = NSMenu()
 
-        let settingsItem = NSMenuItem(title: "Settings", action: #selector(showSettings), keyEquivalent: "")
+        let settingsItem = NSMenuItem(title: "Reset Keystrokes", action: #selector(resetKeystrokes), keyEquivalent: "")
         settingsItem.target = self
 
+        let numbersOnlyItem = NSMenuItem(title: "Toggle Number Only", action: #selector(toggleShowNumbersOnly), keyEquivalent: "")
+        numbersOnlyItem.target = self
+        numbersOnlyItem.state = showNumbersOnly ? .on : .off
+
+        let websiteItem = NSMenuItem(title: "Website", action: #selector(goToWebsite), keyEquivalent: "")
+        websiteItem.target = self
+
         menu.addItem(settingsItem)
+        menu.addItem(numbersOnlyItem)
+        menu.addItem(websiteItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(withTitle: "Quit", action: #selector(terminateApp), keyEquivalent: "q")
     }
 
-    @objc func showSettings() {
-        if settingsWindow == nil {
-            // Initialize the settings window
-            settingsWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
-                styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                backing: .buffered,
-                defer: false
-            )
+    @objc func resetKeystrokes() {
+        let confirmResetAlert = NSAlert()
+        confirmResetAlert.messageText = "Reset Keystrokes"
+        confirmResetAlert.informativeText = "Are you sure you want to reset the keystrokes count?"
+        confirmResetAlert.addButton(withTitle: "Reset")
+        confirmResetAlert.addButton(withTitle: "Cancel")
+        confirmResetAlert.alertStyle = .warning
 
-            settingsWindow?.title = "Settings"
-            settingsWindow?.contentViewController = NSHostingController(rootView: SettingsWindow().environmentObject(appDelegate))
-        }
+        let response = confirmResetAlert.runModal()
 
-        // Show or bring to front the settings window
-        if let settingsWindow = self.settingsWindow {
-            if settingsWindow.isVisible {
-                settingsWindow.orderOut(nil)
-            } else {
-                settingsWindow.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-            }
+        if response == .alertFirstButtonReturn {
+            appDelegate.keystrokeCount = 0
+            appDelegate.updateKeystrokesCount()
         }
+    }
+
+    @objc func goToWebsite() {
+        if let url = URL(string: "https://github.com/MarcusDelvecchio/macos-keystroke-counter") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    @objc func toggleShowNumbersOnly() {
+        showNumbersOnly.toggle()
     }
 
     @objc func terminateApp() {
@@ -368,373 +380,6 @@ class ApplicationMenu: ObservableObject {
     }
 }
 
-struct SettingsWindow: View {
-    enum NavigationItem: Hashable {
-        case settings, keystrokeHistory
-    }
-
-    @State private var selectedItem: NavigationItem? = .settings
-    @State private var endpointURL = ""
-    @State private var updateInterval = 0
-    @State private var statusBarInfoSelection = 0
-    @State private var clearKeystrokesDaily = false
-    @EnvironmentObject var appDelegate: AppDelegate
-
-    var body: some View {
-        NavigationView {
-            List {
-                NavigationLink(
-                    destination: LazyView(SettingsView()),
-                    tag: .settings,
-                    selection: $selectedItem
-                ) {
-                    Label("Settings", systemImage: "gearshape")
-                }
-                .padding()
-                .frame(height: 15) // Adjust the height of the navigation items
-
-                NavigationLink(
-                    destination: LazyView(KeystrokeHistoryView()),
-                    tag: .keystrokeHistory,
-                    selection: $selectedItem
-                ) {
-                    Label("History", systemImage: "chart.bar.fill") // Shorten the label
-                }
-                .padding()
-                .frame(height: 15) // Adjust the height of the navigation items
-            }
-            .listStyle(SidebarListStyle())
-
-            // Main content
-            VStack(alignment: .leading, spacing: 10) {
-                switch selectedItem {
-                case .settings:
-                    SettingsView()
-                case .keystrokeHistory:
-                    KeystrokeHistoryView()
-                default:
-                    EmptyView()
-                }
-            }
-            .padding(15)
-            .frame(minWidth: 100,  maxWidth: 300, minHeight: 450)
-            .padding()
-        }
-        .frame(minWidth: 500, maxWidth: 700, minHeight: 600)
-    }
-}
-
-struct SettingsView: View {
-    @State private var endpointURL = UserDefaults.standard.string(forKey: "updateEndpointURI") ?? ""
-    @State private var updateIntervalStr = UserDefaults.standard.string(forKey: "updateInterval") ?? "30"
-    @State private var statusBarInfoSelection = 0
-    @State private var clearKeystrokesDaily = false
-    @EnvironmentObject var appDelegate: AppDelegate
-    
-    // Validation for sending updates inputs
-    @State private var sendUpdatesEnabled = UserDefaults.standard.bool(forKey: "sendingUpdatesEnabled") ?? false
-    @State private var sendUpdatesButtonDisabled = true
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Display the keystroke history
-            Text("Settings")
-                .font(.title)
-                .foregroundColor(.blue)
-            
-            // Send updates to
-            GroupBox(label: Text("Send updates to").font(.headline)) {
-                VStack(alignment: .leading, spacing: 5) {
-                    // Endpoint URI
-                    HStack {
-                        Text("Endpoint URI")
-                        Spacer()
-                    }
-                    TextField("http://your/api/url", text: $endpointURL)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .disabled(sendUpdatesEnabled)
-                        .onChange(of: endpointURL) { newValue in
-                            updateEndpointChanged(newValue)
-                        }
-
-                    // Update Interval
-                    HStack {
-                        Text("Update Interval")
-                        Spacer()
-                        Text("seconds")
-                            .foregroundColor(.secondary)
-                            .padding(.trailing, 5)
-                    }
-                    TextField("30", text: $updateIntervalStr)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .disabled(sendUpdatesEnabled)
-                        .onChange(of: updateIntervalStr) { newValue in
-                            updateIntervalChanged(newValue)
-                        }
-
-                    // Send Keystroke Updates Button
-                    Button(action: {
-                        sendUpdatesButtonPressed()
-                    }) {
-                        Text(sendUpdatesEnabled ? "Disable Send Updates" : "Enable Send Updates")
-                    }
-                    .padding(.top, 5)
-                    .disabled(sendUpdatesButtonDisabled)
-
-                    // Display reason for button being disabled
-                    if !sendUpdatesEnabled {
-                        Text(disabledButtonText())
-                            .foregroundColor(.gray)
-                            .padding(.top, 5)
-                    }
-                }
-                .padding(8)
-            }
-            .frame(maxWidth: 300)
-            .onAppear {
-                // Initialize sendUpdatesButtonDisabled when the view appears
-                sendUpdatesButtonDisabled = !areSendUpdatesInputsValid()
-            }
-
-            // Status bar info
-            GroupBox(label: Text("Status bar info").font(.headline)) {
-                VStack(alignment: .leading, spacing: 5) {
-                    RadioButtonGroup(items: ["Keystrokes from today", "All-time keystrokes"], selected: $statusBarInfoSelection)
-                }
-                .padding(8)
-            }
-
-            // Keystroke stats
-            GroupBox(label: Text("Keystroke stats").font(.headline)) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("All-time keystrokes: \(appDelegate.totalKeystrokes)")
-                    Text("Keystrokes today: \(appDelegate.keystrokeCount)")
-                }
-                .padding(8)
-            }
-
-            // Other settings
-            GroupBox(label: Text("Other settings").font(.headline)) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Toggle("Store daily keystrokes", isOn: $appDelegate.clearKeystrokesDaily)
-                    Button("Delete all keystroke data") {
-                        // Handle delete action
-                        clearAllKeystrokeData()
-                    }
-                }
-                .padding(8)
-            }
-
-            Spacer()
-        }
-        .padding(15)
-        .frame(minWidth: 100, maxWidth: 400, minHeight: 450)
-        .padding()
-    }
-    
-    func clearAllKeystrokeData() {
-        // Display confirmation modal
-        let alert = NSAlert()
-        alert.messageText = "Are you sure you want to clear all keystroke data?"
-        alert.informativeText = "This action cannot be undone."
-        alert.addButton(withTitle: "Cancel")
-        alert.addButton(withTitle: "Clear All")
-        let response = alert.runModal()
-
-        if response == .alertSecondButtonReturn {
-            // Clear all keystroke data
-            UserDefaults.standard.removeObject(forKey: "keystrokesToday")
-            UserDefaults.standard.removeObject(forKey: "lastDate")
-            UserDefaults.standard.removeObject(forKey: "totalKeystrokes")
-            UserDefaults.standard.removeObject(forKey: "clearKeystrokesDaily")
-
-            // Clear keystroke history
-            let historyKeys = UserDefaults.standard.dictionaryRepresentation().keys.filter { $0.hasPrefix("keystrokesHistory_") }
-            for key in historyKeys {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
-            
-            // Update local variables
-            appDelegate.keystrokeCount = 0
-            appDelegate.totalKeystrokes = 0
-
-            // Display success message
-            displaySuccess("Keystroke Data  Cleared Successfully")
-        }
-    }
-    
-    func updateEndpointChanged(_ newValue: String) {
-        UserDefaults.standard.set(newValue, forKey: "updateEndpointURI")
-        updateSendUpdatesButtonDisabled()
-    }
-
-    func updateIntervalChanged(_ newValue: String) {
-        UserDefaults.standard.set(newValue, forKey: "updateInterval")
-        updateSendUpdatesButtonDisabled()
-    }
-
-    func sendUpdatesButtonPressed() {
-        sendUpdatesEnabled.toggle()
-        UserDefaults.standard.set(sendUpdatesEnabled, forKey: "sendingUpdatesEnabled")
-        updateSendUpdatesButtonDisabled()
-    }
-
-    func updateSendUpdatesButtonDisabled() {
-        sendUpdatesButtonDisabled = !areSendUpdatesInputsValid()
-    }
-    
-    func areSendUpdatesInputsValid() -> Bool {
-        let validEndpoint = isValidEndpoint(endpointURL)
-        let validInterval = Int(updateIntervalStr) ?? 0 > 0
-        return validEndpoint && validInterval
-    }
-    
-    func isValidEndpoint(_ endpoint: String) -> Bool {
-        return endpoint.lowercased().hasPrefix("http://") || endpoint.lowercased().hasPrefix("https://")
-    }
-    
-    func disabledButtonText() -> String {
-        if !isValidEndpoint(endpointURL) && !(Int(updateIntervalStr) ?? 0 > 0) {
-            return "Missing values for sending updates"
-        } else if !isValidEndpoint(endpointURL) {
-            return "Valid HTTP/HTTPS endpoint required."
-        } else {
-            return "Update interval must be an positive integer"
-        }
-    }
-    
-    // Display success message in an alert
-    func displaySuccess(_ message: String) {
-        let successAlert = NSAlert()
-        successAlert.messageText = message
-        successAlert.alertStyle = .informational
-        successAlert.addButton(withTitle: "OK")
-        successAlert.runModal()
-    }
-    
-    // Display error message in an alert
-    func displayError(_ message: String) {
-        let errorAlert = NSAlert()
-        errorAlert.messageText = message
-        errorAlert.alertStyle = .critical
-        errorAlert.addButton(withTitle: "OK")
-        errorAlert.runModal()
-    }
-}
-
-struct KeystrokeHistoryView: View {
-    var body: some View {
-        // Display the keystroke history
-        Text("Keystroke History")
-            .font(.title)
-            .foregroundColor(.blue)
-            .padding(.top, 20)
-
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                if let todayHistory = getTodayKeystrokeHistory() {
-                    Text(todayHistory)
-                        .padding()
-                }
-
-                ForEach(getKeystrokeHistory(), id: \.self) { historyEntry in
-                    Text(historyEntry)
-                }
-
-                if getKeystrokeHistory().isEmpty && getTodayKeystrokeHistory() == nil {
-                    Text("No keystroke history yet.")
-                        .padding()
-                }
-            }
-        }
-    }
-    
-    func getTodayKeystrokeHistory() -> String? {
-        guard let todayKeystrokes = UserDefaults.standard.value(forKey: "keystrokesToday") as? Int else {
-            return nil
-        }
-
-        let todayDateString = formatDate(Date())
-        return "\(todayDateString): \(todayKeystrokes) keystrokes"
-    }
-
-    func getKeystrokeHistory() -> [String] {
-        var history: [String] = []
-
-        // Fetch keystroke history from UserDefaults
-        let historyKeys = UserDefaults.standard.dictionaryRepresentation().keys.filter { $0.hasPrefix("keystrokesHistory_") }
-        for key in historyKeys {
-            if let date = getDateFromHistoryKey(key),
-               let keystrokes = UserDefaults.standard.value(forKey: key) as? Int {
-                let dateString = formatDate(date)
-                let entry = "\(dateString): \(keystrokes) keystrokes"
-                history.append(entry)
-            }
-        }
-
-        return history
-    }
-
-    func getDateFromHistoryKey(_ key: String) -> Date? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateString = key.replacingOccurrences(of: "keystrokesHistory_", with: "")
-        return dateFormatter.date(from: dateString)
-    }
-
-    func formatDate(_ date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM d"
-        return dateFormatter.string(from: date)
-    }
-}
-
-
-struct RadioButtonGroup: View {
-    let items: [String]
-    @Binding var selected: Int
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            ForEach(0..<items.count, id: \.self) { index in
-                RadioButton(
-                    text: items[index],
-                    isSelected: index == selected,
-                    action: { selected = index }
-                )
-            }
-        }
-    }
-}
-
-struct RadioButton: View {
-    let text: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .foregroundColor(isSelected ? .blue : .gray)
-                Text(text)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct LazyView<Content: View>: View {
-    var content: () -> Content
-
-    init(_ content: @autoclosure @escaping () -> Content) {
-        self.content = content
-    }
-
-    var body: Content {
-        content()
-    }
-}
 
 struct KeystrokeDataObject: Codable {
     let timestamp: String
