@@ -235,7 +235,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
             CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
             CGEvent.tapEnable(tap: eventTap, enable: true)
-            CFRunLoopRun()
+            // AppKit owns the main run loop. Return so application launch can
+            // finish and AppKit can dispatch events alongside the event tap.
         }
     }
 
